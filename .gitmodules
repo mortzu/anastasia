@@ -1,0 +1,6 @@
+[submodule "public/extlib/bootstrap"]
+	path = public/extlib/bootstrap
+	url = https://github.com/twbs/bootstrap.git
+[submodule "public/extlib/novnc"]
+	path = public/extlib/novnc
+	url = https://github.com/kanaka/noVNC.git
