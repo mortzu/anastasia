@@ -19,6 +19,13 @@ if (!isset($_SERVER['REMOTE_USER'])) {
   exit(1);
 }
 
+// check if the noVNC folder exists
+if (!is_dir(realpath(__DIR__ . '/..') . '/novnc_token')) {
+  header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500);
+  error_log("Make sure the directory " . realpath(__DIR__ . '/..') . '/novnc_token' . " exists!\n");
+  exit(1);
+}
+
 // check if the noVNC folder is writable
 if (!is_writable(realpath(__DIR__ . '/../novnc_token'))) {
   header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500);
