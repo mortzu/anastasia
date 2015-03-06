@@ -1,37 +1,37 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>noVNC</title>
+    <title>{{{TITLE}}} - Console</title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-startup-image" href="extlib/novnc/images/screen_320x460.png">
+    <link rel="apple-touch-icon" href="extlib/novnc/images/screen_57x57.png">
     <link rel="stylesheet" href="extlib/novnc/include/base.css" title="plain">
     <script>var INCLUDE_URI= "extlib/novnc/include/";</script>
-    <!--
-    <script type='text/javascript' src='http://getfirebug.com/releases/lite/1.2/firebug-lite-compressed.js'></script>
-    -->
     <script src="extlib/novnc/include/util.js"></script>
   </head>
 
   <body style="margin: 0px;">
     <div id="noVNC_screen">
       <div id="noVNC_status_bar" class="noVNC_status_bar" style="margin-top: 0px;">
-        <table border=0 width="100%">
+        <table border="0" width="100%">
           <tr>
             <td><div id="noVNC_status" style="position: relative; height: auto;">Loading</div></td>
-            <td width="1%"><div id="noVNC_buttons"><input type=button value="Send CtrlAltDel" id="sendCtrlAltDelButton">
-                        <span id="noVNC_xvp_buttons">
-                        <input type=button value="Shutdown"
-                            id="xvpShutdownButton">
-                        <input type=button value="Reboot"
-                            id="xvpRebootButton">
-                        <input type=button value="Reset"
-                            id="xvpResetButton">
-                        </span>
-            </div></td>
-          </tr></table>
+            <td width="1%">
+              <div id="noVNC_buttons">
+                <input type="button" value="Send CtrlAltDel" id="sendCtrlAltDelButton">
+                <span id="noVNC_xvp_buttons">
+                  <input type="button" value="Shutdown" id="xvpShutdownButton">
+                  <input type="button" value="Reboot" id="xvpRebootButton">
+                  <input type="button" value="Reset" id="xvpResetButton">
+                </span>
+              </div>
+            </td>
+          </tr>
+        </table>
       </div>
       <canvas id="noVNC_canvas" width="640px" height="20px">Canvas not supported.</canvas>
     </div>
@@ -69,7 +69,7 @@
             msg = '<form onsubmit="return setPassword();"';
             msg += '  style="margin-bottom: 0px">';
             msg += 'Password Required: ';
-            msg += '<input type=password size=10 id="password_input" class="noVNC_status">';
+            msg += '<input type="password" size="10" id="password_input" class="noVNC_status">';
             msg += '<\/form>';
             $D('noVNC_status_bar').setAttribute("class", "noVNC_status_warn");
             $D('noVNC_status').innerHTML = msg;
@@ -197,7 +197,6 @@
                            'onFBUComplete': FBUComplete});
             rfb.connect(host, port, password, path+'?token='+token);
         };
-        </script>
-
+    </script>
   </body>
 </html>

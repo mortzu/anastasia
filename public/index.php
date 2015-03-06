@@ -167,7 +167,7 @@ if (isset($_GET['domain_name']) && isset($_GET['action'])) {
           file_put_contents(realpath(__DIR__ . '/../novnc_token') . '/' . substr(md5($domain_name), 0, 10), substr(md5($domain_name), 0, 10) . ': ' . $domain_host_hostname . ':' . $domains[$domain_name]['vnc_port']);
 
           // return content of noVNC
-          echo file_get_contents(realpath(__DIR__ . '/../templates/parts/vnc.tmpl'));
+          echo str_replace('{{{TITLE}}}', $config['title'], file_get_contents(realpath(__DIR__ . '/../templates/parts/vnc.tmpl')));
 
           // terminate execution
           die();

@@ -4,3 +4,6 @@
 [submodule "public/extlib/novnc"]
 	path = public/extlib/novnc
 	url = https://github.com/kanaka/noVNC.git
+[submodule "extlib/websockify"]
+	path = extlib/websockify
+	url = https://github.com/kanaka/websockify.git
