@@ -199,7 +199,13 @@ $site_content .= "</tr>\n";
 // iterate over domains array
 foreach ($domains as $domain_name => $domain_info) {
   $site_content .= "<tr>\n";
-  $site_content .= '<td>' . $domain_name . "</td>\n";
+
+  if (isset($config['alias'][$domain_info['host_hostname']][$domain_name]) &&
+      $config['alias'][$domain_info['host_hostname']][$domain_name] != '')
+    $site_content .= '<td>' . $config['alias'][$domain_info['host_hostname']][$domain_name] . "</td>\n";
+  else
+    $site_content .= '<td>' . $domain_name . "</td>\n";
+
   $site_content .= '<td><span id="status" class="label label-' . (($domain_info['status'] == true) ? 'success">running' : 'danger">stopped') . "</span></td>\n";
   $site_content .= '<td>' . $domain_info['vcpu_current'] . ' / ' . $domain_info['vcpu_max'] . "</td>\n";
   $site_content .= '<td>' . (($domain_info['memory_current'] == NULL) ? ' - ' : formatBytes($domain_info['memory_current'] * 1024) . (($domain_info['memory_current'] != $domain_info['memory_max']) ? ' / ' . formatBytes($domain_info['memory_max'] * 1024) : '')) . "</td>\n";

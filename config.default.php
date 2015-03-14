@@ -21,4 +21,10 @@ $config['staff_member'] = array();
  */
 $config['rights'] = array();
 
+/*
+ alias hostnames for VPS
+ $config['alias']['hostname of domain host']['hostname of domain'] = array('username');
+ */
+$config['alias'] = array();
+
 ?>
