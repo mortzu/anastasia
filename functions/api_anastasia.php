@@ -66,20 +66,21 @@ function get_domain_data($domain_hosts, $active_user = NULL) {
 
   // Iterate over results
   foreach($results as $result) {
+    // Continue if mCurl fails
     if ($result->hasError())
       continue;
 
-    // Grab URL and pass it to the browser
+    // Convert JSON string to array
     $domain_host_data = @json_decode($result->body, true);
 
     // Get URL of API backend
     $domain_host = $result->info['url'];
 
-    // If decoding fails continue anyway
+    // Continue if decoding fails
     if (!is_array($domain_host_data))
-      return array();
+      continue;
 
-    // Iterate over domains of host
+    // Iterate domains of host
     foreach ($domain_host_data as $domain) {
       // Check if this is a domain
       if (!isset($domain['state']))
