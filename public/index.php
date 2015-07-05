@@ -39,209 +39,75 @@ require_once realpath(__DIR__ . '/../config.default.php');
 if (file_exists(realpath(__DIR__ . '/../config.php')))
   require_once realpath(__DIR__ . '/../config.php');
 
-if (!isset($_SERVER['REMOTE_USER']) && isset($_SERVER['PHP_AUTH_USER']))
-  $_SERVER['REMOTE_USER'] = $_SERVER['PHP_AUTH_USER'];
+// Check if the noVNC folder exists
+if (!is_dir(realpath(__DIR__ . '/..') . '/novnc_token'))
+  webui_error("Make sure the directory " . realpath(__DIR__ . '/..') . '/novnc_token' . " exists!\n");
 
-// if remote user not set send 500 HTTP status
-if (!isset($_SERVER['REMOTE_USER'])) {
-  header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500);
-  error_log("Make sure \$_SERVER['REMOTE_USER'] is set!\n");
-  exit(1);
-}
+// Check if the noVNC folder is writable
+if (!is_writable(realpath(__DIR__ . '/../novnc_token')))
+  webui_error("Make sure " . realpath(__DIR__ . '/../novnc_token') . " is writable!\n");
 
-// check if the noVNC folder exists
-if (!is_dir(realpath(__DIR__ . '/..') . '/novnc_token')) {
-  header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500);
-  error_log("Make sure the directory " . realpath(__DIR__ . '/..') . '/novnc_token' . " exists!\n");
-  exit(1);
-}
-
-// check if the noVNC folder is writable
-if (!is_writable(realpath(__DIR__ . '/../novnc_token'))) {
-  header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500);
-  error_log("Make sure " . realpath(__DIR__ . '/../novnc_token') . " is writable!\n");
-  exit(1);
-}
-
-// include all files in functions directory
+// Include all files in functions directory
 if (is_dir(realpath(__DIR__ . '/../functions')))
   foreach (glob(realpath(__DIR__ . '/../functions') . '/*') as $file)
     if (is_file($file))
       require_once $file;
 
-function ip_is_private($ip) {
-  $ip = explode('.', $ip);
-  $a = (int) $ip[0];
-  $b = (int) $ip[1];
-  $c = (int) $ip[2];
-  $d = (int) $ip[3];
+// Variable of current user
+$active_user = NULL;
 
-  if ($a === 10)
-    return true;
+// Do login
+do {
+  if (isset($_SERVER['PHP_AUTH_USER']) &&
+      isset($_SERVER['PHP_AUTH_PW']) &&
+      isset($config['user'][$_SERVER['PHP_AUTH_USER']]['password']) &&
+      $config['user'][$_SERVER['PHP_AUTH_USER']]['password'] == hash('sha512', $_SERVER['PHP_AUTH_PW']))
+    $active_user = $_SERVER['PHP_AUTH_USER'];
+  else {
+    header('WWW-Authenticate: Basic realm="Anastasia"');
+    header('HTTP/1.0 401 Unauthorized');
+    exit;
+  }
+} while ($active_user == NULL);
 
-  if ($a === 192 && $b === 168)
-    return true;
-
-  if ($a !== 172)
-    return false;
-
-  if ($b >= 16 && $b <= 31)
-    return true;
-
-  return false;
-}
-
-function api_call($url) {
-  // create a new cURL resource
-  $ch = curl_init();
-
-  // set URL
-  curl_setopt($ch, CURLOPT_URL, $url);
-
-  // return the content
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-
-  // grab URL and pass it to the browser
-  $data = curl_exec($ch);
-
-  // close cURL resource, and free up system resources
-  curl_close($ch);
-
-  return $data;
-}
-
-function formatBytes($bytes, $precision = 2) {
-  $units = array('B', 'KB', 'MB', 'GB', 'TB');
-
-  $bytes = max($bytes, 0);
-  $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
-  $pow = min($pow, count($units) - 1);
-  $bytes /= pow(1024, $pow);
-
-  return round($bytes, $precision) . ' ' . $units[$pow];
-}
-
-// variables for status messages
+// Variables for status messages
 $msg_error = '';
 $msg_success = '';
 
-// variable for virtual servers
+// Variable for virtual servers
 $domains = array();
 
-/* iterate over array
+/* Iterate over array
    get domain list from hosts
    and informations about virtual servers
 */
-foreach ($config['domain_hosts'] as $domain_host) {
-  // grab URL and pass it to the browser
-  $domain_host_data = @json_decode(api_call($domain_host . '/?action=get_domains'), true);
+foreach ($config['domain_hosts'] as $domain_host)
+  $domains = array_merge_recursive($domains, get_domain_data($domain_host, $active_user));
 
-  // if decoding failed continue
-  if (!is_array($domain_host_data))
-    continue;
-
-  // iterate over domains of host
-  foreach ($domain_host_data as $domain) {
-    // check if this is a domain
-    if (!isset($domain['state']))
-      continue;
-
-    /* check if user is staff
-       or has the right to administrate this domain
-    */
-    if ((!isset($config['rights'][$domain_host_data['hostname']][$domain['name']]) ||
-         !is_array($config['rights'][$domain_host_data['hostname']][$domain['name']]) ||
-         !in_array($_SERVER['REMOTE_USER'], $config['rights'][$domain_host_data['hostname']][$domain['name']])) &&
-         !in_array($_SERVER['REMOTE_USER'], $config['staff_member']))
-      continue;
-
-    // set variables
-    $domains[$domain_host_data['hostname']][$domain['name']]['state'] = ($domain['state'] == 'running' ? true : false);
-    $domains[$domain_host_data['hostname']][$domain['name']]['id'] = $domain['id'];
-    $domains[$domain_host_data['hostname']][$domain['name']]['host_uri'] = $domain_host;
-    $domains[$domain_host_data['hostname']][$domain['name']]['host_hostname'] = $domain['name'];
-    $domains[$domain_host_data['hostname']][$domain['name']]['hypervisor'] = $domain_host_data['hypervisor'];
-    $domains[$domain_host_data['hostname']][$domain['name']]['vcpu'] = $domain['vcpu'];
-    $domains[$domain_host_data['hostname']][$domain['name']]['memory'] = $domain['memory'];
-    $domains[$domain_host_data['hostname']][$domain['name']]['vnc_port'] = isset($domain['vnc_port']) ? $domain['vnc_port'] : NULL;
-    $domains[$domain_host_data['hostname']][$domain['name']]['vnc_address'] = isset($domain['vnc_address']) ? $domain['vnc_address'] : NULL;
-
-    if (isset($domain['ip']) && is_array($domain['ip']))
-      $domains[$domain_host_data['hostname']][$domain['name']]['ip_assignment'] = $domain['ip'];
-    elseif (isset($config['ip_assignment'][$domain['name']]) && is_array($config['ip_assignment'][$domain['name']]))
-      $domains[$domain_host_data['hostname']][$domain['name']]['ip_assignment'] = $config['ip_assignment'][$domain['name']];
-    else
-      $domains[$domain_host_data['hostname']][$domain['name']]['ip_assignment'] = NULL;
-  }
-
-  // unset variables
-  unset($domain_host_data);
-}
-
-// sort array by keys
-ksort($domains);
-
-// action requested
+// Action requested
 if (isset($_GET['domain_name']) && isset($_GET['action'])) {
-  $domain_name = $_GET['domain_name'];
+  if (domain_action($_GET['domain_name'], $_GET['action'], $active_user))
+    $msg_success = 'Successful!';
+  else
+    $msg_error = 'Failed!';
 
-  foreach ($domains as $host_hostname => $domain)
-    foreach ($domain as $tmp_domain_name => $tmp_domain_info)
-      if ($tmp_domain_name == $domain_name) {
-        $domain_host_hostname = $host_hostname;
-        $domain_host_uri = $tmp_domain_info['host_uri'];
-      }
-
-  // check if host of domain is set
-  if (!empty($domain_host_hostname)) {
-    /* check if user is staff
-       or has the right to administrate this domain
-    */
-    if ((!isset($config['rights'][$domain_host_hostname][$domain_name]) ||
-         !is_array($config['rights'][$domain_host_hostname][$domain_name]) ||
-         !in_array($_SERVER['REMOTE_USER'], $config['rights'][$domain_host_hostname][$domain_name])) &&
-         !in_array($_SERVER['REMOTE_USER'], $config['staff_member']))
-      $msg_error = 'You don\'t have permission to do this!';
-    else {
-      switch($_GET['action']) {
-        case 'domain_start':
-        case 'domain_shutdown':
-        case 'domain_reboot':
-        case 'domain_reset':
-          if ($domains[$domain_host_hostname][$domain_name]['hypervisor'] == 'OpenVZ')
-            $data = api_call($domain_host_uri . '/?action=' . $_GET['action'] . '&name=' . $domains[$domain_host_hostname][$domain_name]['id']);
-          else
-            $data = api_call($domain_host_uri . '/?action=' . $_GET['action'] . '&name=' . $domain_name);
-
-          if ($data['type'] == 'success')
-            $msg_success = 'Successful!';
-          else
-            $msg_error = 'Failed!';
-          break;
-        case 'domain_console':
-          // write token file for noVNC
-          file_put_contents(realpath(__DIR__ . '/../novnc_token') . '/' . substr(md5($domain_name), 0, 10), substr(md5($domain_name), 0, 10) . ': ' . $domain_host_hostname . ':' . $domains[$domain_host_hostname][$domain_name]['vnc_port']);
-
-          // return content of noVNC
-          echo str_replace('{{{TITLE}}}', $config['title'], file_get_contents(realpath(__DIR__ . '/../templates/parts/vnc.tmpl')));
-
-          // terminate execution
-          die();
-          break;
-      }
-    }
-  } else
-    $msg_error = 'Host of domain not set!';
+  // Return content of noVNC
+  if ($_GET['action'] == 'domain_console') {
+    echo str_replace('{{ site.title }}', $config['title'], file_get_contents(realpath(__DIR__ . '/../templates/parts/vnc.tmpl')));
+    // Terminate execution
+    die();
+  }
 }
 
 $site_content = '<h2>Domains</h2>';
 
-// display status messages
+// Display status messages
 if (isset($msg_success) && !empty($msg_success))
   $site_content .= '<div class="alert alert-success" role="alert">' . $msg_success . "</div>\n";
 if (isset($msg_error) && !empty($msg_error))
   $site_content .= '<div class="alert alert-danger" role="alert">' . $msg_error . "</div>\n";
 
+// Display page content
 $site_content .= "<table class=\"table table-striped\">\n";
 
 $site_content .= "<tr>\n";
@@ -254,7 +120,7 @@ $site_content .= "  <th>IPs</th>\n";
 $site_content .= "  <th>Tasks</th>\n";
 $site_content .= "</tr>\n";
 
-// iterate over domains array
+// Iterate over domains array
 foreach ($domains as $host_hostname => $host_domains) {
   foreach ($host_domains as $domain_name => $domain_info) {
     $site_content .= "<tr>\n";
@@ -287,11 +153,11 @@ foreach ($domains as $host_hostname => $host_domains) {
     $site_content .= "<a href=\"" . $_SERVER['REQUEST_URI'] . "?action=domain_reboot&domain_name=" . $domain_name . "\" class=\"btn btn-default\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Reboot\"> <span class=\"glyphicon glyphicon-refresh\"></span> </a>\n";
     $site_content .= "<a href=\"" . $_SERVER['REQUEST_URI'] . "?action=domain_reset&domain_name=" . $domain_name . "\" class=\"btn btn-default" . (($domain_info['hypervisor'] == 'OpenVZ') ? ' disabled' : '') . "\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Hard Reset\"> <span class=\"glyphicon glyphicon-fire\"></span> </a>\n";
 
-    /* display link to console only if domain has VNC port set
+    /* Display link to console only if domain has VNC port set
        and listen address is not localhost
      */
-    if ($domain_info['vnc_port'] != NULL && (isset($domain_info['vnc_address']) && $domain_info['vnc_address'] != '127.0.0.1'))
-      $site_content .= "<a onclick=\"window.open('" . $_SERVER['REQUEST_URI'] . "?action=domain_console&domain_name=" . $domain_name . "&token=" . substr(md5($domain_name), 0, 10) . "')\" class=\"btn btn-default\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Console\"> <span class=\"glyphicon glyphicon-blackboard\"></span> </a>\n";
+    if (isset($domain_info['console_type']) && $domain_info['console_type'] == 'VNC' && $domain_info['console_port'] != NULL && (isset($domain_info['console_address']) && $domain_info['console_address'] != '127.0.0.1'))
+      $site_content .= "<a onclick=\"window.open('" . $_SERVER['REQUEST_URI'] . "?action=domain_console&port=" . $config['vnc_port'] . "&domain_name=" . $domain_name . "&token=" . substr(md5($domain_name), 0, 10) . "')\" class=\"btn btn-default\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Console\"> <span class=\"glyphicon glyphicon-blackboard\"></span> </a>\n";
 
     $site_content .= "</td>\n";
     $site_content .= "</tr>\n";
@@ -303,7 +169,7 @@ $site_content .= "</table>\n";
 // Get content of main template
 $content = str_replace('{{ site.title }}', $config['title'], file_get_contents(realpath(__DIR__ . '/../templates/site/main.tmpl')));
 
-// display parsed template
+// Display parsed template
 echo str_replace('{{{SITE}}}', $site_content, $content);
 
 ?>
