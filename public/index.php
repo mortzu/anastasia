@@ -32,6 +32,10 @@ POSSIBILITY OF SUCH DAMAGE.
 
 // Include config
 require_once realpath(__DIR__ . '/../config.default.php');
+
+/* If a custom config exists
+ * include this too
+ */
 if (file_exists(realpath(__DIR__ . '/../config.php')))
   require_once realpath(__DIR__ . '/../config.php');
 
