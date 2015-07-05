@@ -1,4 +1,5 @@
 config.php
+config.json
 novnc_token/*
 public/custom.css
 *.htpasswd
