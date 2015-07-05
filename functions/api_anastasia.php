@@ -49,57 +49,75 @@ function anastasia_api_call($url) {
   return $data;
 }
 
-function get_domain_data($domain_host, $active_user = NULL) {
-  global $config;
+function get_domain_data($domain_hosts, $active_user = NULL) {
+  global $client, $config;
 
   // Variable for virtual servers
   $domains = array();
 
-  // Grab URL and pass it to the browser
-  $domain_host_data = @json_decode(anastasia_api_call($domain_host . '/?action=get_domains'), true);
+  /* Iterate over array
+     get domain list from hosts
+     and informations about virtual servers
+   */
+  $domain_hosts_new = array_map(function($value) { return $value . '/?action=get_domains'; }, $domain_hosts);
 
-  // If decoding fails continue anyway
-  if (!is_array($domain_host_data))
-    return array();
+  // Start parallel client
+  $results = $client->get($domain_hosts_new, [CURLOPT_RETURNTRANSFER => 1]);
 
-  // Iterate over domains of host
-  foreach ($domain_host_data as $domain) {
-    // Check if this is a domain
-    if (!isset($domain['state']))
+  // Iterate over results
+  foreach($results as $result) {
+    if ($result->hasError())
       continue;
 
-    /* Check if user is staff
-     * or has the right to administrate this domain
-     */
-    if ((!isset($config['rights'][$domain_host_data['hostname']][$domain['name']]) ||
-         !is_array($config['rights'][$domain_host_data['hostname']][$domain['name']]) ||
-         !in_array($active_user, $config['rights'][$domain_host_data['hostname']][$domain['name']])) &&
-         !in_array($active_user, $config['staff_member']) &&
-         ($active_user != NULL))
-      continue;
+    // Grab URL and pass it to the browser
+    $domain_host_data = @json_decode($result->body, true);
 
-    // Set variables
-    $domains[$domain_host_data['hostname']][$domain['name']]['state'] = ($domain['state'] == 'running' ? true : false);
-    $domains[$domain_host_data['hostname']][$domain['name']]['id'] = $domain['id'];
-    $domains[$domain_host_data['hostname']][$domain['name']]['host_uri'] = $domain_host;
-    $domains[$domain_host_data['hostname']][$domain['name']]['host_hostname'] = $domain['name'];
-    $domains[$domain_host_data['hostname']][$domain['name']]['hypervisor'] = $domain_host_data['hypervisor'];
-    $domains[$domain_host_data['hostname']][$domain['name']]['vcpu'] = $domain['vcpu'];
-    $domains[$domain_host_data['hostname']][$domain['name']]['memory'] = $domain['memory'];
-    $domains[$domain_host_data['hostname']][$domain['name']]['console_type'] = isset($domain['console_type']) ? $domain['console_type'] : NULL;
-    $domains[$domain_host_data['hostname']][$domain['name']]['console_port'] = isset($domain['console_port']) ? $domain['console_port'] : NULL;
-    $domains[$domain_host_data['hostname']][$domain['name']]['console_address'] = isset($domain['console_address']) ? $domain['console_address'] : NULL;
+    // Get URL of API backend
+    $domain_host = $result->info['url'];
 
-    if (isset($domain['ip']) && is_array($domain['ip']))
-      $domains[$domain_host_data['hostname']][$domain['name']]['ip_assignment'] = $domain['ip'];
-    elseif (isset($config['ip_assignment'][$domain['name']]) && is_array($config['ip_assignment'][$domain['name']]))
-      $domains[$domain_host_data['hostname']][$domain['name']]['ip_assignment'] = $config['ip_assignment'][$domain['name']];
-    else
-      $domains[$domain_host_data['hostname']][$domain['name']]['ip_assignment'] = NULL;
+    // If decoding fails continue anyway
+    if (!is_array($domain_host_data))
+      return array();
+
+    // Iterate over domains of host
+    foreach ($domain_host_data as $domain) {
+      // Check if this is a domain
+      if (!isset($domain['state']))
+        continue;
+
+      /* Check if user is staff
+       * or has the right to administrate this domain
+       */
+      if ((!isset($config['rights'][$domain_host_data['hostname']][$domain['name']]) ||
+           !is_array($config['rights'][$domain_host_data['hostname']][$domain['name']]) ||
+           !in_array($active_user, $config['rights'][$domain_host_data['hostname']][$domain['name']])) &&
+           !in_array($active_user, $config['staff_member']) &&
+           ($active_user != NULL))
+        continue;
+
+      // Set variables
+      $domains[$domain_host_data['hostname']][$domain['name']]['state'] = ($domain['state'] == 'running' ? true : false);
+      $domains[$domain_host_data['hostname']][$domain['name']]['id'] = $domain['id'];
+      $domains[$domain_host_data['hostname']][$domain['name']]['host_uri'] = $domain_host;
+      $domains[$domain_host_data['hostname']][$domain['name']]['host_hostname'] = $domain['name'];
+      $domains[$domain_host_data['hostname']][$domain['name']]['hypervisor'] = $domain_host_data['hypervisor'];
+      $domains[$domain_host_data['hostname']][$domain['name']]['vcpu'] = $domain['vcpu'];
+      $domains[$domain_host_data['hostname']][$domain['name']]['memory'] = $domain['memory'];
+      $domains[$domain_host_data['hostname']][$domain['name']]['console_type'] = isset($domain['console_type']) ? $domain['console_type'] : NULL;
+      $domains[$domain_host_data['hostname']][$domain['name']]['console_port'] = isset($domain['console_port']) ? $domain['console_port'] : NULL;
+      $domains[$domain_host_data['hostname']][$domain['name']]['console_address'] = isset($domain['console_address']) ? $domain['console_address'] : NULL;
+
+      if (isset($domain['ip']) && is_array($domain['ip']))
+        $domains[$domain_host_data['hostname']][$domain['name']]['ip_assignment'] = $domain['ip'];
+      elseif (isset($config['ip_assignment'][$domain['name']]) && is_array($config['ip_assignment'][$domain['name']]))
+        $domains[$domain_host_data['hostname']][$domain['name']]['ip_assignment'] = $config['ip_assignment'][$domain['name']];
+      else
+        $domains[$domain_host_data['hostname']][$domain['name']]['ip_assignment'] = NULL;
+    }
+
+    // Unset variables
+    unset($domain_host_data);
   }
-
-  // Unset variables
-  unset($domain_host_data);
 
   // Sort array by keys
   ksort($domains);

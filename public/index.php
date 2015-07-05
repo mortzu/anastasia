@@ -30,6 +30,15 @@ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED O
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+/* Include multi request
+ * CURL version
+ */
+require_once realpath(__DIR__ . '/../extlib/mcurl/vendor/autoload.php');
+
+// Create client object
+use MCurl\Client;
+$client = new Client();
+
 // Include config
 require_once realpath(__DIR__ . '/../config.default.php');
 
@@ -74,15 +83,11 @@ do {
 $msg_error = '';
 $msg_success = '';
 
-// Variable for virtual servers
-$domains = array();
-
 /* Iterate over array
    get domain list from hosts
    and informations about virtual servers
 */
-foreach ($config['domain_hosts'] as $domain_host)
-  $domains = array_merge_recursive($domains, get_domain_data($domain_host, $active_user));
+$domains = get_domain_data($config['domain_hosts'], $active_user);
 
 // Action requested
 if (isset($_GET['domain_name']) && isset($_GET['action'])) {

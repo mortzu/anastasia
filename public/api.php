@@ -30,6 +30,15 @@ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED O
 POSSIBILITY OF SUCH DAMAGE.
 */
 
+/* Include multi request
+ * CURL version
+ */
+require_once realpath(__DIR__ . '/../extlib/mcurl/vendor/autoload.php');
+
+// Create client object
+use MCurl\Client;
+$client = new Client();
+
 // Include config
 require_once realpath(__DIR__ . '/../config.default.php');
 if (file_exists(realpath(__DIR__ . '/../config.php')))
@@ -58,15 +67,11 @@ if ($active_user == NULL)
 if (!isset($_GET['action']))
   api_return_json(array('type' => 'fatal', 'message' => 'Not found'), 404);
 
-// Variable for virtual servers
-$domains = array();
-
 /* Iterate over array
  * Get domain list from hosts
  * and informations about virtual servers
  */
-foreach ($config['domain_hosts'] as $domain_host)
-  $domains = array_merge_recursive($domains, get_domain_data($domain_host, $active_user));
+$domains = get_domain_data($config['domain_hosts'], $active_user);
 
 switch ($_GET['action']) {
   case 'get_domains':
