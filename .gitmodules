@@ -7,3 +7,6 @@
 [submodule "extlib/websockify"]
 	path = extlib/websockify
 	url = https://github.com/kanaka/websockify.git
+[submodule "extlib/mcurl"]
+	path = extlib/mcurl
+	url = https://github.com/KhristenkoYura/mcurl.git
