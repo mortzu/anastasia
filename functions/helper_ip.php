@@ -34,6 +34,9 @@ POSSIBILITY OF SUCH DAMAGE.
  * is in private range
  */
 function ip_is_private($ip) {
+  if (strpos($ip, '.') === false)
+    return false;
+
   $ip = explode('.', $ip);
   $a = (int) $ip[0];
   $b = (int) $ip[1];
