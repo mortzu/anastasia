@@ -300,8 +300,8 @@ foreach ($domains as $host_hostname => $host_domains) {
 
 $site_content .= "</table>\n";
 
-// get content of main template
-$content = str_replace('{{{TITLE}}}', $config['title'], file_get_contents(realpath(__DIR__ . '/../templates/site/main.tmpl')));
+// Get content of main template
+$content = str_replace('{{ site.title }}', $config['title'], file_get_contents(realpath(__DIR__ . '/../templates/site/main.tmpl')));
 
 // display parsed template
 echo str_replace('{{{SITE}}}', $site_content, $content);
