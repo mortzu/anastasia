@@ -46,7 +46,7 @@ function anastasia_api_call($url) {
   // Close cURL resource, and free up system resources
   curl_close($ch);
 
-  return $data;
+  return json_decode($data, true);
 }
 
 function get_domain_data($domain_hosts, $active_user = NULL) {
@@ -74,7 +74,7 @@ function get_domain_data($domain_hosts, $active_user = NULL) {
     $domain_host_data = @json_decode($result->body, true);
 
     // Get URL of API backend
-    $domain_host = $result->info['url'];
+    $domain_host = dirname($result->info['url']);
 
     // Continue if decoding fails
     if (!is_array($domain_host_data))
