@@ -78,10 +78,9 @@ switch ($_GET['action']) {
     api_return_json($domains);
     break;
   case 'domain_start':
-    break;
   case 'domain_shutdown':
-    break;
   case 'domain_reboot':
+    api_return_json(domain_action($_GET['domain_name'], $_GET['action'], $active_user));
     break;
   default:
     api_return_json(array('type' => 'fatal', 'message' => 'Not found'), 404);
