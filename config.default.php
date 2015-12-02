@@ -40,6 +40,7 @@ $config['title'] = 'anastasia';
 $config['domain_hosts'] = array();
 
 // VNC websocket port
+$config['vnc_path'] = '';
 $config['vnc_port'] = 62002;
 
 /*
