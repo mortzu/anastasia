@@ -113,13 +113,13 @@ if (isset($_REQUEST['action']) && !empty($_REQUEST['action'])) {
   }
 }
 
-$site_content = '<h2>Domains</h2>';
+$site_content = "<h2>Domains</h2>\n";
 
 // Display status messages
 if (isset($msg_success) && !empty($msg_success))
-  $site_content .= '<div class="alert alert-success" role="alert">' . $msg_success . "</div>\n";
+  $site_content .= "<div class=\"alert alert-success\" role=\"alert\">" . $msg_success . "</div>\n";
 if (isset($msg_error) && !empty($msg_error))
-  $site_content .= '<div class="alert alert-danger" role="alert">' . $msg_error . "</div>\n";
+  $site_content .= "<div class=\"alert alert-danger\" role=\"alert\">" . $msg_error . "</div>\n";
 
 // Display page content
 $site_content .= "<form method=\"post\" action=\"" . explode('?', $_SERVER['REQUEST_URI'], 2)[0] . "\">\n";
@@ -142,14 +142,14 @@ foreach ($domains as $host_hostname => $host_domains) {
 
     if (isset($config['alias'][$domain_info['host_hostname']][$domain_name]) &&
       $config['alias'][$domain_info['host_hostname']][$domain_name] != '')
-      $site_content .= '<td>' . $config['alias'][$domain_info['host_hostname']][$domain_name] . "</td>\n";
+      $site_content .= "<td>" . $config['alias'][$domain_info['host_hostname']][$domain_name] . "</td>\n";
     else
-      $site_content .= '<td>' . $domain_name . "</td>\n";
+      $site_content .= "<td>" . $domain_name . "</td>\n";
 
-    $site_content .= '<td><span id="status" class="label label-' . (($domain_info['state'] == true) ? 'success">running' : 'danger">stopped') . "</span></td>\n";
-    $site_content .= '<td>' . $domain_info['vcpu'] . "</td>\n";
-    $site_content .= '<td>' . (($domain_info['memory'] == NULL) ? ' - ' : formatBytes($domain_info['memory'] * 1024)) . "</td>\n";
-    $site_content .= '<td>' . $domain_info['hypervisor'] . "</td>\n";
+    $site_content .= "<td><span id=\"status\" class=\"label label-" . (($domain_info['state'] == true) ? 'success">running' : 'danger">stopped') . "</span></td>\n";
+    $site_content .= "<td>" . $domain_info['vcpu'] . "</td>\n";
+    $site_content .= "<td>" . (($domain_info['memory'] == NULL) ? ' - ' : formatBytes($domain_info['memory'] * 1024)) . "</td>\n";
+    $site_content .= "<td>" . $domain_info['hypervisor'] . "</td>\n";
 
     $site_content .= "<td>\n";
     if (is_array($domain_info['ip_assignment']))
