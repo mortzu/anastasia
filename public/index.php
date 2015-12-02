@@ -111,6 +111,11 @@ if (isset($_REQUEST['action']) && !empty($_REQUEST['action'])) {
       die();
     }
   }
+
+  /* Get domain informations again
+     after action has called
+  */
+  $domains = get_domain_data($config['domain_hosts'], $active_user);
 }
 
 $site_content = "<h2>Domains</h2>\n";
