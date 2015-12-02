@@ -43,10 +43,21 @@ function anastasia_api_call($url) {
   // Grab URL and pass it to the browser
   $data = curl_exec($ch);
 
+  // Get HTTP code
+  $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+  // Decode JSON
+  $json_decoded = json_decode($data, true);
+
+  if (!isset($json_decoded['type']) && $http_code == 200)
+    $json_decoded['type'] = 'success';
+  elseif (!isset($json_decoded['type']) && $http_code != 200)
+    $json_decoded['type'] = '';
+
   // Close cURL resource, and free up system resources
   curl_close($ch);
 
-  return json_decode($data, true);
+  return $json_decoded;
 }
 
 function get_domain_data($domain_hosts, $active_user = NULL) {
