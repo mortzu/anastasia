@@ -91,7 +91,7 @@ $domains = get_domain_data($config['domain_hosts'], $active_user);
 
 // Action requested
 if (isset($_REQUEST['action']) && !empty($_REQUEST['action'])) {
-  if (strstr($_POST['action'], '|'))
+  if (isset($_POST['action']) && strstr($_POST['action'], '|'))
     list($action, $domain_name) = explode('|', $_POST['action']);
   elseif (isset($_GET['domain_name']) && !empty($_GET['domain_name'])) {
     $action = $_GET['action'];
