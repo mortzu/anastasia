@@ -90,17 +90,26 @@ $msg_success = '';
 $domains = get_domain_data($config['domain_hosts'], $active_user);
 
 // Action requested
-if (isset($_GET['domain_name']) && isset($_GET['action'])) {
-  if (domain_action($_GET['domain_name'], $_GET['action'], $active_user))
-    $msg_success = 'Successful!';
-  else
-    $msg_error = 'Failed!';
+if (isset($_REQUEST['action']) && !empty($_REQUEST['action'])) {
+  if (strstr($_POST['action'], '|'))
+    list($action, $domain_name) = explode('|', $_POST['action']);
+  elseif (isset($_GET['domain_name']) && !empty($_GET['domain_name'])) {
+    $action = $_GET['action'];
+    $domain_name = $_GET['domain_name'];
+  }
 
-  // Return content of noVNC
-  if ($_GET['action'] == 'domain_console') {
-    echo str_replace('{{ site.title }}', $config['title'], file_get_contents(realpath(__DIR__ . '/../templates/parts/vnc.tmpl')));
-    // Terminate execution
-    die();
+  if (isset($domain_name) && !empty($domain_name)) {
+    if (domain_action($domain_name, $action, $active_user))
+      $msg_success = 'Successful!';
+    else
+      $msg_error = 'Failed!';
+
+    // Return content of noVNC
+    if ($action == 'domain_console') {
+      echo str_replace('{{ site.title }}', $config['title'], file_get_contents(realpath(__DIR__ . '/../templates/parts/vnc.tmpl')));
+      // Terminate execution
+      die();
+    }
   }
 }
 
@@ -113,6 +122,7 @@ if (isset($msg_error) && !empty($msg_error))
   $site_content .= '<div class="alert alert-danger" role="alert">' . $msg_error . "</div>\n";
 
 // Display page content
+$site_content .= "<form method=\"post\" action=\"" . explode('?', $_SERVER['REQUEST_URI'], 2)[0] . "\">\n";
 $site_content .= "<table class=\"table table-striped\">\n";
 
 $site_content .= "<tr>\n";
@@ -153,10 +163,10 @@ foreach ($domains as $host_hostname => $host_domains) {
     $site_content .= "</td>\n";
 
     $site_content .= "<td>\n";
-    $site_content .= "<a href=\"" . explode('?', $_SERVER['REQUEST_URI'], 2)[0] . "?action=domain_start&domain_name=" . $domain_name . "\" class=\"btn btn-default" . (($domain_info['state'] == true) ? ' disabled' : '') . "\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Boot\"> <span class=\"glyphicon glyphicon-play\"></span> </a>\n";
-    $site_content .= "<a href=\"" . explode('?', $_SERVER['REQUEST_URI'], 2)[0] . "?action=domain_shutdown&domain_name=" . $domain_name . "\" class=\"btn btn-default" . (($domain_info['state'] != true) ? ' disabled' : '') . "\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Shutdown\"> <span class=\"glyphicon glyphicon-off\"></span> </a>\n";
-    $site_content .= "<a href=\"" . explode('?', $_SERVER['REQUEST_URI'], 2)[0] . "?action=domain_reboot&domain_name=" . $domain_name . "\" class=\"btn btn-default\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Reboot\"> <span class=\"glyphicon glyphicon-refresh\"></span> </a>\n";
-    $site_content .= "<a href=\"" . explode('?', $_SERVER['REQUEST_URI'], 2)[0] . "?action=domain_reset&domain_name=" . $domain_name . "\" class=\"btn btn-default" . (($domain_info['hypervisor'] == 'OpenVZ') ? ' disabled' : '') . "\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Hard Reset\"> <span class=\"glyphicon glyphicon-fire\"></span> </a>\n";
+    $site_content .= "<button type=\"submit\" name=\"action\" value=\"domain_start|" . $domain_name . "\" class=\"btn btn-default" . (($domain_info['state'] == true) ? ' disabled' : '') . "\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Boot\"> <span class=\"glyphicon glyphicon-play\"></span> </button>\n";
+    $site_content .= "<button type=\"submit\" name=\"action\" value=\"domain_shutdown|" . $domain_name . "\" class=\"btn btn-default" . (($domain_info['state'] != true) ? ' disabled' : '') . "\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Shutdown\"> <span class=\"glyphicon glyphicon-off\"></span> </button>\n";
+    $site_content .= "<button type=\"submit\" name=\"action\" value=\"domain_reboot|" . $domain_name . "\" class=\"btn btn-default\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Reboot\"> <span class=\"glyphicon glyphicon-refresh\"></span> </button>\n";
+    $site_content .= "<button type=\"submit\" name=\"action\" value=\"domain_reset|" . $domain_name . "\" class=\"btn btn-default" . (($domain_info['hypervisor'] == 'OpenVZ') ? ' disabled' : '') . "\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Hard Reset\"> <span class=\"glyphicon glyphicon-fire\"></span> </button>\n";
 
     /* Display link to console only if domain has VNC port set
        and listen address is not localhost
@@ -170,6 +180,7 @@ foreach ($domains as $host_hostname => $host_domains) {
 }
 
 $site_content .= "</table>\n";
+$site_content .= "</form>\n";
 
 // Get content of main template
 $content = str_replace('{{ site.title }}', $config['title'], file_get_contents(realpath(__DIR__ . '/../templates/site/main.tmpl')));
