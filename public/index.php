@@ -1,7 +1,7 @@
 <?php
 
 /*
-2014, Moritz Kaspar Rudert (mortzu) <mr@planetcyborg.de>.
+2014-2015, Moritz Kaspar Rudert (mortzu) <me@mortzu.de>.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are
@@ -156,7 +156,7 @@ foreach ($domains as $host_hostname => $host_domains) {
     $site_content .= "<td>" . (($domain_info['memory'] == NULL) ? ' - ' : formatBytes($domain_info['memory'] * 1024)) . "</td>\n";
     $site_content .= "<td>" . $domain_info['hypervisor'] . "</td>\n";
 
-    $site_content .= "<td>\n";
+    $site_content .= '<td>';
     if (is_array($domain_info['ip_assignment']))
       foreach ($domain_info['ip_assignment'] as $address)
         if (!ip_is_private($address))

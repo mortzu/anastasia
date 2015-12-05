@@ -1,7 +1,7 @@
 <?php
 
 /*
-2014, Moritz Kaspar Rudert (mortzu) <mr@planetcyborg.de>.
+2014-2015, Moritz Kaspar Rudert (mortzu) <me@mortzu.de>.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are
