@@ -30,12 +30,18 @@ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED O
 POSSIBILITY OF SUCH DAMAGE.
 */
 
-function anastasia_api_call($url) {
+function anastasia_api_call($url, $api_key = NULL) {
   // Create a new cURL resource
   $ch = curl_init();
 
+  // We do POST
+  curl_setopt($ch, CURLOPT_POST, true);
+
   // Set URL
   curl_setopt($ch, CURLOPT_URL, $url);
+
+  // Set API key header
+  curl_setopt($ch, CURLOPT_HTTPHEADER, array('API-KEY: ' . $api_key));
 
   // Return the content
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -70,7 +76,7 @@ function get_domain_data($domain_hosts, $active_user = NULL) {
      get domain list from hosts
      and informations about virtual servers
    */
-  $domain_hosts_new = array_map(function($value) { return $value . '/?action=get_domains'; }, $domain_hosts);
+  $domain_hosts_new = array_map(function($value) { return explode('|', $value)[0] . '/' . explode('|', $value)[1]; }, $domain_hosts);
 
   // Start parallel client
   $results = $client->get($domain_hosts_new, [CURLOPT_RETURNTRANSFER => 1]);
@@ -85,7 +91,7 @@ function get_domain_data($domain_hosts, $active_user = NULL) {
     $domain_host_data = @json_decode($result->body, true);
 
     // Get URL of API backend
-    $domain_host = dirname($result->info['url']);
+    $domain_host = rtrim(dirname($result->info['url']), '/');
 
     // Continue if decoding fails
     if (!is_array($domain_host_data))
@@ -113,6 +119,7 @@ function get_domain_data($domain_hosts, $active_user = NULL) {
       $domains[$domain_host_data['hostname']][$domain['name']]['host_uri'] = $domain_host;
       $domains[$domain_host_data['hostname']][$domain['name']]['host_hostname'] = $domain['name'];
       $domains[$domain_host_data['hostname']][$domain['name']]['hypervisor'] = $domain_host_data['hypervisor'];
+      $domains[$domain_host_data['hostname']][$domain['name']]['unprivileged'] = isset($domain['unprivileged']) ? $domain['unprivileged'] : NULL;
       $domains[$domain_host_data['hostname']][$domain['name']]['vcpu'] = $domain['vcpu'];
       $domains[$domain_host_data['hostname']][$domain['name']]['memory'] = $domain['memory'];
       $domains[$domain_host_data['hostname']][$domain['name']]['console_type'] = isset($domain['console_type']) ? $domain['console_type'] : NULL;
@@ -164,15 +171,22 @@ function domain_action($domain_name, $action, $active_user = NULL) {
        ($active_user != NULL))
     return false;
 
+  $tmp_api_key = NULL;
+
+  foreach($config['domain_hosts'] as $domain_host) {
+    if ($domain_host_uri == explode('|', $domain_host)[0])
+      $tmp_api_key = explode('|', $domain_host)[1];
+  }
+
   switch($action) {
-    case 'domain_start':
-    case 'domain_shutdown':
-    case 'domain_reboot':
-    case 'domain_reset':
+    case 'start':
+    case 'shutdown':
+    case 'reboot':
+    case 'reset':
       if ($domains[$domain_host_hostname][$domain_name]['hypervisor'] == 'OpenVZ')
-        $data = anastasia_api_call($domain_host_uri . '/?action=' . $action . '&name=' . $domains[$domain_host_hostname][$domain_name]['id']);
+        $data = anastasia_api_call($domain_host_uri . '/' . $action . '/' . $domains[$domain_host_hostname][$domain_name]['id'], $tmp_api_key);
       else
-        $data = anastasia_api_call($domain_host_uri . '/?action=' . $action . '&name=' . $domain_name);
+        $data = anastasia_api_call($domain_host_uri . '/' . $action . '/' . $domain_name, $tmp_api_key);
 
       if ($data['type'] == 'success')
         return true;
@@ -180,7 +194,7 @@ function domain_action($domain_name, $action, $active_user = NULL) {
         return false;
       break;
 
-    case 'domain_console':
+    case 'console':
       // write token file for noVNC
       file_put_contents(realpath(__DIR__ . '/../novnc_token') . '/' . substr(md5($domain_name), 0, 10), substr(md5($domain_name), 0, 10) . ': ' . $domain_host_hostname . ':' . $domains[$domain_host_hostname][$domain_name]['console_port']);
       return true;

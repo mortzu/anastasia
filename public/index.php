@@ -105,7 +105,7 @@ if (isset($_REQUEST['action']) && !empty($_REQUEST['action'])) {
       $msg_error = 'Failed!';
 
     // Return content of noVNC
-    if ($action == 'domain_console') {
+    if ($action == 'console') {
       echo str_replace('{{ site.title }}', $config['title'], file_get_contents(realpath(__DIR__ . '/../templates/parts/vnc.tmpl')));
       // Terminate execution
       die();
@@ -154,7 +154,7 @@ foreach ($domains as $host_hostname => $host_domains) {
     $site_content .= "<td><span id=\"status\" class=\"label label-" . (($domain_info['state'] == true) ? 'success">running' : 'danger">stopped') . "</span></td>\n";
     $site_content .= "<td>" . $domain_info['vcpu'] . "</td>\n";
     $site_content .= "<td>" . (($domain_info['memory'] == NULL) ? ' - ' : formatBytes($domain_info['memory'] * 1024)) . "</td>\n";
-    $site_content .= "<td>" . $domain_info['hypervisor'] . "</td>\n";
+    $site_content .= "<td>" . $domain_info['hypervisor'] . (($domain_info['hypervisor'] == 'LXC' && isset($domain_info['unprivileged']) && $domain_info['unprivileged'] == true) ? ' (unprivileged)' : '') . "</td>\n";
 
     $site_content .= '<td>';
     if (is_array($domain_info['ip_assignment']))
@@ -168,16 +168,16 @@ foreach ($domains as $host_hostname => $host_domains) {
     $site_content .= "</td>\n";
 
     $site_content .= "<td>\n";
-    $site_content .= "<button type=\"submit\" name=\"action\" value=\"domain_start|" . $domain_name . "\" class=\"btn btn-default" . (($domain_info['state'] == true) ? ' disabled' : '') . "\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Boot\"> <span class=\"glyphicon glyphicon-play\"></span> </button>\n";
-    $site_content .= "<button type=\"submit\" name=\"action\" value=\"domain_shutdown|" . $domain_name . "\" class=\"btn btn-default" . (($domain_info['state'] != true) ? ' disabled' : '') . "\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Shutdown\"> <span class=\"glyphicon glyphicon-off\"></span> </button>\n";
-    $site_content .= "<button type=\"submit\" name=\"action\" value=\"domain_reboot|" . $domain_name . "\" class=\"btn btn-default\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Reboot\"> <span class=\"glyphicon glyphicon-refresh\"></span> </button>\n";
-    $site_content .= "<button type=\"submit\" name=\"action\" value=\"domain_reset|" . $domain_name . "\" class=\"btn btn-default" . (($domain_info['hypervisor'] == 'OpenVZ') ? ' disabled' : '') . "\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Hard Reset\"> <span class=\"glyphicon glyphicon-fire\"></span> </button>\n";
+    $site_content .= "<button type=\"submit\" name=\"action\" value=\"start|" . $domain_name . "\" class=\"btn btn-default" . (($domain_info['state'] == true) ? ' disabled' : '') . "\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Boot\"> <span class=\"glyphicon glyphicon-play\"></span> </button>\n";
+    $site_content .= "<button type=\"submit\" name=\"action\" value=\"shutdown|" . $domain_name . "\" class=\"btn btn-default" . (($domain_info['state'] != true) ? ' disabled' : '') . "\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Shutdown\"> <span class=\"glyphicon glyphicon-off\"></span> </button>\n";
+    $site_content .= "<button type=\"submit\" name=\"action\" value=\"reboot|" . $domain_name . "\" class=\"btn btn-default\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Reboot\"> <span class=\"glyphicon glyphicon-refresh\"></span> </button>\n";
+    $site_content .= "<button type=\"submit\" name=\"action\" value=\"reset|" . $domain_name . "\" class=\"btn btn-default" . (($domain_info['hypervisor'] == 'OpenVZ') ? ' disabled' : '') . "\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Reset\"> <span class=\"glyphicon glyphicon-fire\"></span> </button>\n";
 
     /* Display link to console only if domain has VNC port set
        and listen address is not localhost
      */
     if (isset($domain_info['console_type']) && $domain_info['console_type'] == 'VNC' && $domain_info['console_port'] != NULL && (isset($domain_info['console_address']) && $domain_info['console_address'] != '127.0.0.1'))
-      $site_content .= "<a onclick=\"window.open('" . explode('?', $_SERVER['REQUEST_URI'], 2)[0] . "?action=domain_console&path=" . $config['vnc_path'] . "&port=" . $config['vnc_port'] . "&domain_name=" . $domain_name . "&token=" . substr(md5($domain_name), 0, 10) . "')\" class=\"btn btn-default\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Console\"> <span class=\"glyphicon glyphicon-blackboard\"></span> </a>\n";
+      $site_content .= "<a onclick=\"window.open('" . explode('?', $_SERVER['REQUEST_URI'], 2)[0] . "?action=console&path=" . $config['vnc_path'] . "&port=" . $config['vnc_port'] . "&domain_name=" . $domain_name . "&token=" . substr(md5($domain_name), 0, 10) . "')\" class=\"btn btn-default\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Console\"> <span class=\"glyphicon glyphicon-blackboard\"></span> </a>\n";
 
     $site_content .= "</td>\n";
     $site_content .= "</tr>\n";
