@@ -114,10 +114,10 @@ function get_domain_data($domain_hosts, $active_user = NULL) {
         continue;
 
       // Set variables
-      $domains[$domain_host_data['hostname']][$domain['name']]['state'] = ($domain['state'] == 'running' ? true : false);
+      $domains[$domain_host_data['hostname']][$domain['name']]['state'] = $domain['state'];
       $domains[$domain_host_data['hostname']][$domain['name']]['id'] = $domain['id'];
       $domains[$domain_host_data['hostname']][$domain['name']]['host_uri'] = $domain_host;
-      $domains[$domain_host_data['hostname']][$domain['name']]['host_hostname'] = $domain['name'];
+      $domains[$domain_host_data['hostname']][$domain['name']]['name'] = $domain['name'];
       $domains[$domain_host_data['hostname']][$domain['name']]['hypervisor'] = $domain_host_data['hypervisor'];
       $domains[$domain_host_data['hostname']][$domain['name']]['unprivileged'] = isset($domain['unprivileged']) ? $domain['unprivileged'] : NULL;
       $domains[$domain_host_data['hostname']][$domain['name']]['vcpu'] = $domain['vcpu'];
@@ -126,8 +126,8 @@ function get_domain_data($domain_hosts, $active_user = NULL) {
       $domains[$domain_host_data['hostname']][$domain['name']]['console_port'] = isset($domain['console_port']) ? $domain['console_port'] : NULL;
       $domains[$domain_host_data['hostname']][$domain['name']]['console_address'] = isset($domain['console_address']) ? $domain['console_address'] : NULL;
 
-      if (isset($domain['ip']) && is_array($domain['ip']))
-        $domains[$domain_host_data['hostname']][$domain['name']]['ip_assignment'] = $domain['ip'];
+      if (isset($domain['ip_assignment']) && is_array($domain['ip_assignment']))
+        $domains[$domain_host_data['hostname']][$domain['name']]['ip_assignment'] = $domain['ip_assignment'];
       elseif (isset($config['ip_assignment'][$domain['name']]) && is_array($config['ip_assignment'][$domain['name']]))
         $domains[$domain_host_data['hostname']][$domain['name']]['ip_assignment'] = $config['ip_assignment'][$domain['name']];
       else
@@ -180,9 +180,10 @@ function domain_action($domain_name, $action, $active_user = NULL) {
 
   switch($action) {
     case 'start':
+    case 'stop':
     case 'shutdown':
     case 'reboot':
-    case 'reset':
+    case 'restart':
       if ($domains[$domain_host_hostname][$domain_name]['hypervisor'] == 'OpenVZ')
         $data = anastasia_api_call($domain_host_uri . '/' . $action . '/' . $domains[$domain_host_hostname][$domain_name]['id'], $tmp_api_key);
       else

@@ -52,11 +52,11 @@ if (is_dir(realpath(__DIR__ . '/../functions')))
 
 $active_user = NULL;
 
-if (!isset($_GET['token']) || empty($_GET['token']))
+if (!isset($_SERVER['HTTP_API_KEY']) || empty($_SERVER['HTTP_API_KEY']))
   api_return_json(array('type' => 'fatal', 'message' => 'Forbidden'), 403);
 
 foreach ($config['user'] as $username => $user)
-  if ($user['token'] == $_GET['token']) {
+  if ($user['token'] == $_SERVER['HTTP_API_KEY']) {
     $active_user = $username;
     break;
   }
@@ -64,27 +64,40 @@ foreach ($config['user'] as $username => $user)
 if ($active_user == NULL)
   api_return_json(array('type' => 'fatal', 'message' => 'Forbidden'), 403);
 
-if (!isset($_GET['action']))
+/* if (!isset($_GET['action']))
   api_return_json(array('type' => 'fatal', 'message' => 'Not found'), 404);
+*/
 
-/* Iterate over array
- * Get domain list from hosts
- * and informations about virtual servers
- */
-$domains = get_domain_data($config['domain_hosts'], $active_user);
+$subpage = str_replace($_SERVER['SCRIPT_NAME'], '', $_SERVER['REQUEST_URI']);
 
-switch ($_GET['action']) {
-  case 'get_domains':
-    api_return_json($domains);
-    break;
-  case 'domain_start':
-  case 'domain_shutdown':
-  case 'domain_reboot':
-    api_return_json(domain_action($_GET['domain_name'], $_GET['action'], $active_user));
-    break;
-  default:
-    api_return_json(array('type' => 'fatal', 'message' => 'Not found'), 404);
-    break;
+if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+  /* Iterate over array
+   * Get domain list from hosts
+   *  and informations about virtual servers
+   */
+  $domains = get_domain_data($config['domain_hosts'], $active_user);
+
+  $return_domains = array();
+
+  foreach ($domains as $key => $value)
+    $return_domains = array_merge_recursive($return_domains, $value);
+
+  api_return_json($return_domains);
+} elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
+  list(, $command, $domain) = explode('/', $subpage);
+
+  switch ($command) {
+    case 'start':
+    case 'stop':
+    case 'shutdown':
+    case 'restart':
+    case 'reboot':
+      api_return_json(domain_action($domain, $command, $active_user));
+      break;
+    default:
+      api_return_json(array('type' => 'fatal', 'message' => 'Not found'), 404);
+      break;
+  }
 }
 
 ?>
