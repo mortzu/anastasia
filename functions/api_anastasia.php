@@ -106,32 +106,32 @@ function get_domain_data($domain_hosts, $active_user = NULL) {
       /* Check if user is staff
        * or has the right to administrate this domain
        */
-      if ((!isset($config['rights'][$domain_host_data['hostname']][$domain['name']]) ||
-           !is_array($config['rights'][$domain_host_data['hostname']][$domain['name']]) ||
-           !in_array($active_user, $config['rights'][$domain_host_data['hostname']][$domain['name']])) &&
+      if ((!isset($config['rights'][$domain['hostname']][$domain['name']]) ||
+           !is_array($config['rights'][$domain['hostname']][$domain['name']]) ||
+           !in_array($active_user, $config['rights'][$domain['hostname']][$domain['name']])) &&
            !in_array($active_user, $config['staff_member']) &&
            ($active_user != NULL))
         continue;
 
       // Set variables
-      $domains[$domain_host_data['hostname']][$domain['name']]['state'] = $domain['state'];
-      $domains[$domain_host_data['hostname']][$domain['name']]['id'] = $domain['id'];
-      $domains[$domain_host_data['hostname']][$domain['name']]['host_uri'] = $domain_host;
-      $domains[$domain_host_data['hostname']][$domain['name']]['name'] = $domain['name'];
-      $domains[$domain_host_data['hostname']][$domain['name']]['hypervisor'] = $domain_host_data['hypervisor'];
-      $domains[$domain_host_data['hostname']][$domain['name']]['unprivileged'] = isset($domain['unprivileged']) ? $domain['unprivileged'] : NULL;
-      $domains[$domain_host_data['hostname']][$domain['name']]['vcpu'] = $domain['vcpu'];
-      $domains[$domain_host_data['hostname']][$domain['name']]['memory'] = $domain['memory'];
-      $domains[$domain_host_data['hostname']][$domain['name']]['console_type'] = isset($domain['console_type']) ? $domain['console_type'] : NULL;
-      $domains[$domain_host_data['hostname']][$domain['name']]['console_port'] = isset($domain['console_port']) ? $domain['console_port'] : NULL;
-      $domains[$domain_host_data['hostname']][$domain['name']]['console_address'] = isset($domain['console_address']) ? $domain['console_address'] : NULL;
+      $domains[$domain['hostname']][$domain['name']]['state'] = $domain['state'];
+      $domains[$domain['hostname']][$domain['name']]['id'] = $domain['id'];
+      $domains[$domain['hostname']][$domain['name']]['host_uri'] = $domain_host;
+      $domains[$domain['hostname']][$domain['name']]['name'] = $domain['name'];
+      $domains[$domain['hostname']][$domain['name']]['hypervisor'] = $domain['hypervisor'];
+      $domains[$domain['hostname']][$domain['name']]['unprivileged'] = isset($domain['unprivileged']) ? $domain['unprivileged'] : NULL;
+      $domains[$domain['hostname']][$domain['name']]['vcpu'] = $domain['vcpu'];
+      $domains[$domain['hostname']][$domain['name']]['memory'] = $domain['memory'];
+      $domains[$domain['hostname']][$domain['name']]['console_type'] = isset($domain['console_type']) ? $domain['console_type'] : NULL;
+      $domains[$domain['hostname']][$domain['name']]['console_port'] = isset($domain['console_port']) ? $domain['console_port'] : NULL;
+      $domains[$domain['hostname']][$domain['name']]['console_address'] = isset($domain['console_address']) ? $domain['console_address'] : NULL;
 
       if (isset($domain['ip_assignment']) && is_array($domain['ip_assignment']))
-        $domains[$domain_host_data['hostname']][$domain['name']]['ip_assignment'] = $domain['ip_assignment'];
+        $domains[$domain['hostname']][$domain['name']]['ip_assignment'] = $domain['ip_assignment'];
       elseif (isset($config['ip_assignment'][$domain['name']]) && is_array($config['ip_assignment'][$domain['name']]))
-        $domains[$domain_host_data['hostname']][$domain['name']]['ip_assignment'] = $config['ip_assignment'][$domain['name']];
+        $domains[$domain['hostname']][$domain['name']]['ip_assignment'] = $config['ip_assignment'][$domain['name']];
       else
-        $domains[$domain_host_data['hostname']][$domain['name']]['ip_assignment'] = NULL;
+        $domains[$domain['hostname']][$domain['name']]['ip_assignment'] = NULL;
     }
 
     // Unset variables
