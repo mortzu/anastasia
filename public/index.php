@@ -177,7 +177,7 @@ foreach ($domains as $host_hostname => $host_domains) {
        and listen address is not localhost
      */
     if (isset($domain_info['console_type']) && $domain_info['console_type'] == 'VNC' && $domain_info['console_port'] != NULL && (isset($domain_info['console_address']) && $domain_info['console_address'] != '127.0.0.1'))
-      $site_content .= "<a onclick=\"window.open('" . explode('?', $_SERVER['REQUEST_URI'], 2)[0] . "?action=console&path=" . $config['vnc_path'] . "&port=" . $config['vnc_port'] . "&domain_name=" . $domain_name . "&token=" . substr(md5($domain_name), 0, 10) . "')\" class=\"btn btn-default\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Console\"> <span class=\"glyphicon glyphicon-blackboard\"></span> </a>\n";
+      $site_content .= "<a onclick=\"window.open('" . explode('?', $_SERVER['REQUEST_URI'], 2)[0] . "?action=console&path=" . $config['vnc_path'] . "&port=" . $config['vnc_port'] . ((isset($domain_info['console_passwd']) && $domain_info['console_passwd'] != '') ? '&password=' . $domain_info['console_passwd'] : '') . "&domain_name=" . $domain_name . "&token=" . substr(md5($domain_name), 0, 10) . "')\" class=\"btn btn-default\" data-container=\"body\" data-toggle=\"tooltip\" data-placement=\"bottom\" title=\"Console\"> <span class=\"glyphicon glyphicon-blackboard\"></span> </a>\n";
 
     $site_content .= "</td>\n";
     $site_content .= "</tr>\n";

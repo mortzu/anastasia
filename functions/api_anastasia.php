@@ -125,6 +125,7 @@ function get_domain_data($domain_hosts, $active_user = NULL) {
       $domains[$domain['hostname']][$domain['name']]['console_type'] = isset($domain['console_type']) ? $domain['console_type'] : NULL;
       $domains[$domain['hostname']][$domain['name']]['console_port'] = isset($domain['console_port']) ? $domain['console_port'] : NULL;
       $domains[$domain['hostname']][$domain['name']]['console_address'] = isset($domain['console_address']) ? $domain['console_address'] : NULL;
+      $domains[$domain['hostname']][$domain['name']]['console_passwd'] = isset($domain['console_passwd']) ? $domain['console_passwd'] : NULL;
 
       if (isset($domain['ip_assignment']) && is_array($domain['ip_assignment']))
         $domains[$domain['hostname']][$domain['name']]['ip_assignment'] = $domain['ip_assignment'];
