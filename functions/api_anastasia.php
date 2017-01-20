@@ -128,7 +128,7 @@ function get_domain_data($domain_hosts, $active_user = NULL) {
       $domains[$domain['hostname']][$domain['name']]['console_passwd'] = isset($domain['console_passwd']) ? $domain['console_passwd'] : NULL;
 
       if (isset($domain['ip_assignment']) && is_array($domain['ip_assignment']))
-        $domains[$domain['hostname']][$domain['name']]['ip_assignment'] = $domain['ip_assignment'];
+        $domains[$domain['hostname']][$domain['name']]['ip_assignment'] = array_unique($domain['ip_assignment']);
       elseif (isset($config['ip_assignment'][$domain['name']]) && is_array($config['ip_assignment'][$domain['name']]))
         $domains[$domain['hostname']][$domain['name']]['ip_assignment'] = $config['ip_assignment'][$domain['name']];
       else
